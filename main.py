@@ -64,19 +64,18 @@ if not os.path.exists(model_path):
     rfc = RandomForestClassifier(random_state=42)
 
 app = FastAPI(title="Heart Failure Prediction API", description="API for predicting heart failure using machine learning model.\n"
-              "{
-  "age": 65.0,
-  "anaemia": 1,
-  "creatinine_phosphokinase": 146.0,
-  "diabetes": 0,
-  "ejection_fraction": 20.0,
-  "high_blood_pressure": 0,
-  "platelets": 162000.0,
-  "serum_creatinine": 1.3,
-  "serum_sodium": 129.0,
-  "sex": 1,
-  "smoking": 1,
-  "time": 7.0}", version="1.0")
+              " age: 65.0,\n"
+              "anaemia: 1,\n"
+              "creatinine_phosphokinase: 146.0,\n"
+              "diabetes: 0,\n"
+              "ejection_fraction: 20.0,\n"
+              "high_blood_pressure: 0,\n"
+              "platelets: 162000.0,\n"
+              "serum_creatinine: 1.3,\n"
+              "serum_sodium: 129.0,\n"
+              "sex: 1,\n"
+              "smoking: 1,\n"
+              "time": 7.0", version="1.0")
 
 model = joblib.load(model_path)
 
