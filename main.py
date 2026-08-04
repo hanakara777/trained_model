@@ -63,7 +63,20 @@ if not os.path.exists(model_path):
 
     rfc = RandomForestClassifier(random_state=42)
 
-app = FastAPI(title="Heart Failure Prediction API", description="API for predicting heart failure using machine learning models.", version="1.0")
+app = FastAPI(title="Heart Failure Prediction API", description="API for predicting heart failure using machine learning model.\n"
+              "{
+  "age": 65.0,
+  "anaemia": 1,
+  "creatinine_phosphokinase": 146.0,
+  "diabetes": 0,
+  "ejection_fraction": 20.0,
+  "high_blood_pressure": 0,
+  "platelets": 162000.0,
+  "serum_creatinine": 1.3,
+  "serum_sodium": 129.0,
+  "sex": 1,
+  "smoking": 1,
+  "time": 7.0}", version="1.0")
 
 model = joblib.load(model_path)
 
@@ -86,7 +99,7 @@ async def predict_heart_failure(request: PatientData):
     input_data = pd.DataFrame([request.model_dump()])
     prediction = model.predict(input_data)
     probability = model.predict_proba(input_data)
-    return {"prediction for death": int(prediction[0]), "probability of survival": probability[0].tolist()}
+    return {"prediction for death(0=Survive, 1=Death)": int(prediction[0]), "probability of survival": probability[0].tolist()}
 
 @app.get("/")
 async def root():
