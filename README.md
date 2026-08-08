@@ -9,4 +9,4 @@ I used open source dataset of heart failure patients. I trained model in noteboo
 4. Pandas and NumPy
 5. Render (for deployment)
 
-Website: https://trained-model-jltq.onrender.com
+Website: [https://trained-model-jltq.onrender.com](https://trained-model-jltq.onrender.com/docs)
