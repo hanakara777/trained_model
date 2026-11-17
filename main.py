@@ -1,67 +1,62 @@
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 import pandas as pd
-from ucimlrepo import fetch_ucirepo 
+from ucimlrepo import fetch_ucirepo
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV,train_test_split
+from sklearn.model_selection import GridSearchCV, train_test_split
 import joblib
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score
 from pydantic import BaseModel
 
 os.makedirs('models', exist_ok=True)
 model_path = 'models/rfc_model.pkl'
-if not os.path.exists(model_path):
-    print("Model file not found. New model will be trained and saved.")
 
+def train_and_save_model(save_path: str = model_path) -> None:
+    print("Training new model...")
 
-    def heart_failure(data_set_id):
-        heart_failure_clinical_records = fetch_ucirepo(id=519) 
-        X = heart_failure_clinical_records.data.features 
-        y = heart_failure_clinical_records.data.targets
-        df = pd.concat([X,y], axis=1)
-        return(df, X, y)
+    records = fetch_ucirepo(id=519)
+    X = records.data.features
+    y = records.data.targets.values.ravel()
 
-    df, X, y = heart_failure(519)
-
-    numerical_features = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
-    if 'death_event' in numerical_features:
-        numerical_features.remove('death_event')
-
-    ct_preprocessing = ColumnTransformer(
-        [('numerical', StandardScaler(), numerical_features)]
-    )
+    numerical_features = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
 
     pipeline = Pipeline([
-        ('preprocessor', ct_preprocessing),
-        ('model', RandomForestClassifier(random_state=42, class_weight='balanced'))
+        ("preprocessor", ColumnTransformer(
+            [("numerical", StandardScaler(), numerical_features)]
+        )),
+        ("model", RandomForestClassifier(
+            random_state=42,
+            class_weight="balanced",
+            max_depth=50,
+            n_estimators=100,
+            min_samples_split=4,
+            min_samples_leaf=2,
+            max_features="sqrt",
+        )),
     ])
 
-    X_test, X_train, y_test, y_train = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
 
-    y_train=y_train.values.ravel()
-    y_test=y_test.values.ravel()
+    pipeline.fit(X_train, y_train)
+
+    y_pred = pipeline.predict(X_test)
+    print("Test accuracy:", accuracy_score(y_test, y_pred))
+    print(classification_report(y_test, y_pred))
+
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    joblib.dump(pipeline, save_path)
+    print(f"Model saved to {save_path}")
 
 
-    tuned_parameters = {
-        'model__max_depth': [50],
-        'model__n_estimators': [100],
-        'model__min_samples_split': [4],
-        'model__min_samples_leaf': [2],
-        'model__max_features': ['sqrt']
-    }
+if not os.path.exists(model_path):
+    train_and_save_model()
 
-    tuned_model_rfc = GridSearchCV(pipeline,tuned_parameters, cv=5, error_score='raise' )
-    tuned_model_rfc.fit(X_train, y_train)
-
-    y_pred_1 = tuned_model_rfc.predict(X_test)
-    y_pred_1 = y_pred_1.ravel()
-
-    joblib.dump(tuned_model_rfc, 'rfc_model.pkl')
-
-    rfc = RandomForestClassifier(random_state=42)
+model = joblib.load(model_path)
 
 app = FastAPI(title="Heart Failure Prediction API", description="API for predicting heart failure using machine learning model.\n"
               " age: 65.0,\n"
@@ -76,8 +71,6 @@ app = FastAPI(title="Heart Failure Prediction API", description="API for predict
               "sex: 1,\n"
               "smoking: 1,\n"
               "time": 7.0", version="1.0")
-
-model = joblib.load(model_path)
 
 class PatientData(BaseModel):
     age: float
