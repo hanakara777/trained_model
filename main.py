@@ -58,8 +58,9 @@ if not os.path.exists(model_path):
 
 model = joblib.load(model_path)
 
-app = FastAPI(title="Heart Failure Prediction API", description="API for predicting heart failure using machine learning model.\n"
-              " age: 65.0,\n"
+app = FastAPI(title="Heart Failure Prediction API", description=("API for predicting heart failure using machine learning model.\n"
+              "{/n"
+              "age: 65.0,\n"
               "anaemia: 1,\n"
               "creatinine_phosphokinase: 146.0,\n"
               "diabetes: 0,\n"
@@ -70,7 +71,10 @@ app = FastAPI(title="Heart Failure Prediction API", description="API for predict
               "serum_sodium: 129.0,\n"
               "sex: 1,\n"
               "smoking: 1,\n"
-              "time": 7.0", version="1.0")
+              "time": 7.0\n"
+              "}" ),
+              version="1.0"
+)
 
 class PatientData(BaseModel):
     age: float
