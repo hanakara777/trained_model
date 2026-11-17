@@ -99,11 +99,12 @@ class PatientData(BaseModel):
 async def predict_heart_failure(request: PatientData):
     input_data = pd.DataFrame([request.model_dump()])
     prediction = model.predict(input_data)
-    probability = model.predict_proba(input_data)
+    proba = model.predict_proba(input_data)[0]
+    classes = list(model.classses_)
     return { "prediction": int(prediction[0]),
         "prediction_label": "Death" if int(prediction[0]) == 1 else "Survive",
-        "probability_survive": float(proba[0]),
-        "probability_death": float(proba[1]),}
+        "probability_survive": float(proba[classes.index(0)]),
+        "probability_death": float(proba[classes.index(1)]),}
 
 @app.get("/")
 async def root():
