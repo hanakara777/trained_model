@@ -91,7 +91,10 @@ async def predict_heart_failure(request: PatientData):
     input_data = pd.DataFrame([request.model_dump()])
     prediction = model.predict(input_data)
     probability = model.predict_proba(input_data)
-    return {"prediction for death(0=Survive, 1=Death)": int(prediction[0]), "probability of survival": probability[0].tolist()}
+    return { "prediction": int(prediction[0]),
+        "prediction_label": "Death" if int(prediction[0]) == 1 else "Survive",
+        "probability_survive": float(proba[0]),
+        "probability_death": float(proba[1]),}
 
 @app.get("/")
 async def root():
